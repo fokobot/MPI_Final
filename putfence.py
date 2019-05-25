@@ -1,23 +1,35 @@
 from mpi4py import MPI
 import numpy as np
-comm = MPI.COMM_WORLD   # Defines the default communicator
-num_procs = comm.Get_size()  # Stores the number of processes in num_procs.
-rank = comm.Get_rank()  # Stores the rank (pid) of the current process
-window_data = np.zeros(2,dtype=np.int)
-my_number = np.empty(1,dtype=np.int)
-src = 0; tgt = num_procs-1
-if rank==src:
-    my_number[0] = 37
+
+comm = MPI.COMM_WORLD
+
+# create a shared array of size 1000 elements of type double
+size = 1000
+itemsize = MPI.DOUBLE.Get_size()
+if comm.Get_rank() == 0:
+    nbytes = size * itemsize
 else:
-    my_number[0] = 1
+    nbytes = 0
 
+# on rank 0, create the shared block
+# on rank 1 get a handle to it (known as a window in MPI speak)
+win = MPI.Win.Allocate_shared(nbytes, itemsize, comm=comm)
 
-intsize = np.dtype('int').itemsize
-win = MPI.Win.Create(window_data,intsize,comm=comm)
+# create a numpy array whose data points to the shared mem
+buf, itemsize = win.Shared_query(0)
+assert itemsize == MPI.DOUBLE.Get_size()
+print(buf)
+ary = np.ndarray(buffer=buf, dtype='d', shape=(size,))
+print(ary[:5])
+# in process rank 1:
+# write the numbers 0.0,1.0,..,4.0 to the first 5 elements of the array
+if comm.rank == 1:
+    ary[:5] = np.arange(5)
 
+# wait in process rank 0 until process 1 has written to the array
+comm.Barrier()
 
-win.Fence()
-if rank==src:
-    # put data in the second element of the window
-    win.Put(my_number,tgt,target=1)
-win.Fence()
+# check that the array is actually shared and process 0 can see
+# the changes made in the array by process 1
+if comm.rank == 0:
+    print(ary[:10])

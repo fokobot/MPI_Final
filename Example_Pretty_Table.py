@@ -24,3 +24,4 @@ https://mpi4py.readthedocs.io/en/stable/
 ----------------------------------------------------------------------
 http://www.cas.mcmaster.ca/~nedialk/COURSES/mpi/Lectures/lec2_1.pdf
 https://pyformat.info/
+https://bitbucket.org/VictorEijkhout/parallel-computing-book/src/default/

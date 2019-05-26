@@ -48,41 +48,63 @@ if rank == 0:
         print(Filosofos)
         time.sleep(1)
 else:
-    Comido = 1
-    while(Comido == 1):
-        tespera = random.randrange(7, 11)
-        time.sleep(tespera)
-        Tenedores, Lo_Tomo = Tomar_Tenedor(left, rank, Tenedores)
-        print("Proceso",rank,"tomo el de la izquierda",Lo_Tomo)
-        if(Lo_Tomo == True):
-            Tenedores, Lo_Tomo = Tomar_Tenedor(right, rank, Tenedores)
-            print("Proceso",rank,"tomo el de la derecha",Lo_Tomo)
-            if(Lo_Tomo == False):
-                tespera = random.randrange(5, 16)
-                time.sleep(tespera)
+    # Tipo 1 = Amistoso
+    # Tipo 0 = Ambicioso
+    Tipo = 1
+    Comido = True
+    if(Tipo == 1):
+        # Codigo Filosofo Amigable
+        while Comido:
+            tpensando = random.randrange(7, 11)
+            time.sleep(tpensando)
+            Tenedores, Lo_Tomo = Tomar_Tenedor(left, rank, Tenedores)
+            print("Proceso",rank,"tomo el de la izquierda",Lo_Tomo)
+            if Lo_Tomo:
                 Tenedores, Lo_Tomo = Tomar_Tenedor(right, rank, Tenedores)
                 print("Proceso",rank,"tomo el de la derecha",Lo_Tomo)
-                if(Lo_Tomo==False):
-                    Tenedores[left] = 0
+                if(Lo_Tomo == False):
+                    tespera = random.randrange(5, 16)
+                    time.sleep(tespera)
+                    Tenedores, Lo_Tomo = Tomar_Tenedor(right, rank, Tenedores)
+                    print("Proceso",rank,"tomo el de la derecha",Lo_Tomo)
+                    if(Lo_Tomo==False):
+                        Tenedores[left] = 0
+                    else:
+                        tcomiendo = random.randrange(2, 6)
+                        time.sleep(tcomiendo)
+                        Comido = False
+                        Tenedores[left] = 0
+                        Tenedores[right] = 0
+                        print("Filosofo", rank, "ya comió")
+                        tpensando = random.randrange(7, 11)
+                        time.sleep(tpensando)
                 else:
                     tcomiendo = random.randrange(2, 6)
                     time.sleep(tcomiendo)
-                    Comido == 0
+                    Comido = False
                     Tenedores[left] = 0
                     Tenedores[right] = 0
                     print("Filosofo", rank, "ya comió")
-                    tespera = random.randrange(7, 11)
-                    time.sleep(tespera)
-            else:
+                    tpensando = random.randrange(7, 11)
+                    time.sleep(tpensando)
+    else:
+        # Codigo Filosofo Ambicioso
+        while Comido:
+            tpensando = random.randrange(7, 11)
+            time.sleep(tpensando)
+            Tenedores, Lo_Tomo = Tomar_Tenedor(left, rank, Tenedores)
+            if Lo_Tomo:
+                Obtener_Derecha = False
+                while Obtener_Derecha == False:
+                    Tenedores, Obtener_Derecha = Tomar_Tenedor(right, rank, Tenedores)
                 tcomiendo = random.randrange(2, 6)
                 time.sleep(tcomiendo)
-                Comido == 0
+                Comido = False
                 Tenedores[left] = 0
                 Tenedores[right] = 0
                 print("Filosofo", rank, "ya comió")
-                tespera = random.randrange(7, 11)
-                time.sleep(tespera)
-
+                tpensando = random.randrange(7, 11)
+                time.sleep(tpensando)
 # if rank == 0:
 #     win_mem = np.empty(num_procs-1,dtype=int)
 #     win_mem.fill(1)

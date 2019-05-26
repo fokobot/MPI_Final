@@ -14,6 +14,24 @@ def Tomar_Tenedor(tenedor, proceso, Tenedores):
         return Tenedores, True;
     else:
         return Tenedores, False;
+# Designación del Tipo de Filosofo a ser
+if rank == 0:
+    AmbiciososRestantes = 2
+    Tipo = [0]
+    for i in range(0, num_procs-1):
+        if(num_procs-1-i<=AmbiciososRestantes):
+            Tipo.append(0)
+            AmbiciososRestantes -= 1
+        elif(AmbiciososRestantes == 0):
+            Tipo.append(1)
+        else:
+            Tipo.append(random.randrange(0, 2))
+            if(Tipo[i+1] == 0):
+                AmbiciososRestantes -= 1
+    TipoFil = Tipo
+else:
+    Tipo = None
+Tipo = comm.scatter(Tipo, root=0)
 # Creación del vector global de la informacipon de los tenedores
 itemsize = MPI.INT.Get_size()
 if rank == 0:
@@ -35,7 +53,11 @@ if rank == 0:
     names = []
     Array_Tenedores = []
     for i in range(1, num_procs):
-        names.append("Filosofo "+ str(i))
+        if(TipoFil[i] == 1):
+            fil = " (Amigable)"
+        else:
+            fil = " (Ambicioso)"
+        names.append("Filosofo " + str(i) + fil)
     Filosofos = PrettyTable(names)
     while(True):
         Filosofos.clear_rows()
@@ -52,8 +74,8 @@ if rank == 0:
 else:
     # Tipo 1 = Amistoso
     # Tipo 0 = Ambicioso
-    Tipo = 1
     Comido = True
+    print("Soy el proceso", rank, "y mi tipo es :", Tipo)
     if(Tipo == 1):
         # Codigo Filosofo Amigable
         while Comido:

@@ -7,6 +7,10 @@ import sys
 comm = MPI.COMM_WORLD   # Defines the default communicator
 num_procs = comm.Get_size()  # Stores the number of processes in num_procs.
 rank = comm.Get_rank()  # Stores the rank (pid) of the current process
+K=int(sys.argv[1])
+# print("Número de parámetros: ", len(sys.argv))
+# print("Lista de argumentos: ", sys.argv)
+# sys.stdout.flush()
 # Función para tomar tenedores
 def Tomar_Tenedor(tenedor, proceso, Tenedores):
     if(Tenedores[tenedor] == 0):
@@ -35,13 +39,13 @@ Tipo = comm.scatter(Tipo, root=0)
 # Creación del vector global de la informacipon de los tenedores
 itemsize = MPI.INT.Get_size()
 if rank == 0:
-    nbytes = (num_procs-1) * itemsize
+    nbytes = (num_procs) * itemsize
 else:
     nbytes = 0
 win = MPI.Win.Allocate_shared(nbytes, itemsize, comm=comm)
 buf, itemsize = win.Shared_query(0)
 assert itemsize == MPI.INT.Get_size()
-Tenedores = np.ndarray(buffer=buf, dtype=int, shape=(num_procs-1,))
+Tenedores = np.ndarray(buffer=buf, dtype=int, shape=(num_procs,))
 # Asignamos el número del tenedor de la derecha y del tenedor de la izquierda a cada proceso
 if(rank < num_procs-1 and rank!=0):
     right = rank
@@ -59,26 +63,45 @@ if rank == 0:
             fil = " (Ambicioso)"
         names.append("Filosofo " + str(i) + fil)
     Filosofos = PrettyTable(names)
-    while(True):
+    while(Tenedores[num_procs-1]<num_procs-1):
+        print("Tenedores en:",Tenedores[num_procs-1],"y este es:",num_procs-1)
         Filosofos.clear_rows()
         Array_Tenedores = []
+        Array_Disponibles = []
         for t in range(1, num_procs):
-            if(t < num_procs-1):
-                Array_Tenedores.append(str(Tenedores[t-1])+" | "+str(Tenedores[t]))
+            if(t == Tenedores[t-1]):
+                first = 'X'
             else:
-                Array_Tenedores.append(str(Tenedores[t-1])+" | "+str(Tenedores[0]))
+                first = 'O'
+            if(t < num_procs-1):
+                if(t == Tenedores[t]):
+                    second = 'X'
+                else:
+                    second = 'O'
+                Array_Tenedores.append(first+" | "+second)
+            else:
+                if(t == Tenedores[0]):
+                    second = 'X'
+                else:
+                    second = 'O'
+                Array_Tenedores.append(first+" | "+second)
+            if(Tenedores[t-1] == 0):
+                Array_Disponibles.append('X')
+            else:
+                Array_Disponibles.append('O')
         Filosofos.add_row(Array_Tenedores)
+        Filosofos.add_row(Array_Disponibles)
         print(Filosofos)
         sys.stdout.flush()
         time.sleep(1)
 else:
     # Tipo 1 = Amistoso
     # Tipo 0 = Ambicioso
-    Comido = True
+    Comido = 0
     print("Soy el proceso", rank, "y mi tipo es :", Tipo)
     if(Tipo == 1):
         # Codigo Filosofo Amigable
-        while Comido:
+        while Comido < K:
             tpensando = random.randrange(7, 11)
             time.sleep(tpensando)
             Tenedores, Lo_Tomo = Tomar_Tenedor(left, rank, Tenedores)
@@ -96,7 +119,7 @@ else:
                     else:
                         tcomiendo = random.randrange(2, 6)
                         time.sleep(tcomiendo)
-                        Comido = False
+                        Comido += 1
                         Tenedores[left] = 0
                         Tenedores[right] = 0
                         print("Filosofo", rank, "ya comió")
@@ -105,7 +128,7 @@ else:
                 else:
                     tcomiendo = random.randrange(2, 6)
                     time.sleep(tcomiendo)
-                    Comido = False
+                    Comido += 1
                     Tenedores[left] = 0
                     Tenedores[right] = 0
                     print("Filosofo", rank, "ya comió")
@@ -113,7 +136,7 @@ else:
                     time.sleep(tpensando)
     else:
         # Codigo Filosofo Ambicioso
-        while Comido:
+        while Comido < K:
             tpensando = random.randrange(7, 11)
             time.sleep(tpensando)
             Tenedores, Lo_Tomo = Tomar_Tenedor(left, rank, Tenedores)
@@ -123,12 +146,14 @@ else:
                     Tenedores, Obtener_Derecha = Tomar_Tenedor(right, rank, Tenedores)
                 tcomiendo = random.randrange(2, 6)
                 time.sleep(tcomiendo)
-                Comido = False
+                Comido += 1
                 Tenedores[left] = 0
                 Tenedores[right] = 0
                 print("Filosofo", rank, "ya comió")
                 tpensando = random.randrange(7, 11)
                 time.sleep(tpensando)
+    Tenedores[num_procs-1] += 1
+    print(Tenedores[num_procs-1])
 # if rank == 0:
 #     win_mem = np.empty(num_procs-1,dtype=int)
 #     win_mem.fill(1)

@@ -3,6 +3,7 @@ import time
 import random
 import numpy as np
 from prettytable import PrettyTable
+import sys
 comm = MPI.COMM_WORLD   # Defines the default communicator
 num_procs = comm.Get_size()  # Stores the number of processes in num_procs.
 rank = comm.Get_rank()  # Stores the rank (pid) of the current process
@@ -46,6 +47,7 @@ if rank == 0:
                 Array_Tenedores.append(str(Tenedores[t-1])+" | "+str(Tenedores[0]))
         Filosofos.add_row(Array_Tenedores)
         print(Filosofos)
+        sys.stdout.flush()
         time.sleep(1)
 else:
     # Tipo 1 = Amistoso

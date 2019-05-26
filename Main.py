@@ -13,10 +13,13 @@ K=int(sys.argv[1])
 # sys.stdout.flush()
 # Función para tomar tenedores
 def Tomar_Tenedor(tenedor, proceso, Tenedores):
+    MPI.Win.Lock(win, proceso, MPI.LOCK_EXCLUSIVE)
     if(Tenedores[tenedor] == 0):
         Tenedores[tenedor] = proceso
+        MPI.Win.Unlock(win, proceso)
         return Tenedores, True;
     else:
+        MPI.Win.Unlock(win, proceso)
         return Tenedores, False;
 # Designación del Tipo de Filosofo a ser
 if rank == 0:
@@ -115,13 +118,17 @@ else:
                     Tenedores, Lo_Tomo = Tomar_Tenedor(right, rank, Tenedores)
                     print("Proceso",rank,"tomo el de la derecha",Lo_Tomo)
                     if(Lo_Tomo==False):
+                        MPI.Win.Lock(win, rank, MPI.LOCK_EXCLUSIVE)
                         Tenedores[left] = 0
+                        MPI.Win.Unlock(win, rank)
                     else:
                         tcomiendo = random.randrange(2, 6)
                         time.sleep(tcomiendo)
                         Comido += 1
+                        MPI.Win.Lock(win, rank, MPI.LOCK_EXCLUSIVE)
                         Tenedores[left] = 0
                         Tenedores[right] = 0
+                        MPI.Win.Unlock(win, rank)
                         print("Filosofo", rank, "ya comió")
                         tpensando = random.randrange(7, 11)
                         time.sleep(tpensando)
@@ -129,8 +136,10 @@ else:
                     tcomiendo = random.randrange(2, 6)
                     time.sleep(tcomiendo)
                     Comido += 1
+                    MPI.Win.Lock(win, rank, MPI.LOCK_EXCLUSIVE)
                     Tenedores[left] = 0
                     Tenedores[right] = 0
+                    MPI.Win.Unlock(win, rank)
                     print("Filosofo", rank, "ya comió")
                     tpensando = random.randrange(7, 11)
                     time.sleep(tpensando)
@@ -147,12 +156,16 @@ else:
                 tcomiendo = random.randrange(2, 6)
                 time.sleep(tcomiendo)
                 Comido += 1
+                MPI.Win.Lock(win, rank, MPI.LOCK_EXCLUSIVE)
                 Tenedores[left] = 0
                 Tenedores[right] = 0
+                MPI.Win.Unlock(win, rank)
                 print("Filosofo", rank, "ya comió")
                 tpensando = random.randrange(7, 11)
                 time.sleep(tpensando)
+    MPI.Win.Lock(win, rank, MPI.LOCK_EXCLUSIVE)
     Tenedores[num_procs-1] += 1
+    MPI.Win.Unlock(win, rank)
     print(Tenedores[num_procs-1])
 # if rank == 0:
 #     win_mem = np.empty(num_procs-1,dtype=int)

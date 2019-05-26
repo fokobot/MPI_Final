@@ -8,9 +8,6 @@ comm = MPI.COMM_WORLD   # Defines the default communicator
 num_procs = comm.Get_size()  # Stores the number of processes in num_procs.
 rank = comm.Get_rank()  # Stores the rank (pid) of the current process
 K=int(sys.argv[1])
-# print("Número de parámetros: ", len(sys.argv))
-# print("Lista de argumentos: ", sys.argv)
-# sys.stdout.flush()
 # Función para tomar tenedores
 def Tomar_Tenedor(tenedor, proceso, Tenedores):
     MPI.Win.Lock(win, proceso, MPI.LOCK_EXCLUSIVE)
@@ -67,7 +64,6 @@ if rank == 0:
         names.append("Filosofo " + str(i) + fil)
     Filosofos = PrettyTable(names)
     while(Tenedores[num_procs-1]<num_procs-1):
-        print("Tenedores en:",Tenedores[num_procs-1],"y este es:",num_procs-1)
         Filosofos.clear_rows()
         Array_Tenedores = []
         Array_Disponibles = []
@@ -101,22 +97,18 @@ else:
     # Tipo 1 = Amistoso
     # Tipo 0 = Ambicioso
     Comido = 0
-    print("Soy el proceso", rank, "y mi tipo es :", Tipo)
     if(Tipo == 1):
         # Codigo Filosofo Amigable
         while Comido < K:
             tpensando = random.randrange(7, 11)
             time.sleep(tpensando)
             Tenedores, Lo_Tomo = Tomar_Tenedor(left, rank, Tenedores)
-            print("Proceso",rank,"tomo el de la izquierda",Lo_Tomo)
             if Lo_Tomo:
                 Tenedores, Lo_Tomo = Tomar_Tenedor(right, rank, Tenedores)
-                print("Proceso",rank,"tomo el de la derecha",Lo_Tomo)
                 if(Lo_Tomo == False):
                     tespera = random.randrange(5, 16)
                     time.sleep(tespera)
                     Tenedores, Lo_Tomo = Tomar_Tenedor(right, rank, Tenedores)
-                    print("Proceso",rank,"tomo el de la derecha",Lo_Tomo)
                     if(Lo_Tomo==False):
                         MPI.Win.Lock(win, rank, MPI.LOCK_EXCLUSIVE)
                         Tenedores[left] = 0
@@ -129,7 +121,6 @@ else:
                         Tenedores[left] = 0
                         Tenedores[right] = 0
                         MPI.Win.Unlock(win, rank)
-                        print("Filosofo", rank, "ya comió")
                         tpensando = random.randrange(7, 11)
                         time.sleep(tpensando)
                 else:
@@ -140,7 +131,6 @@ else:
                     Tenedores[left] = 0
                     Tenedores[right] = 0
                     MPI.Win.Unlock(win, rank)
-                    print("Filosofo", rank, "ya comió")
                     tpensando = random.randrange(7, 11)
                     time.sleep(tpensando)
     else:
@@ -160,23 +150,8 @@ else:
                 Tenedores[left] = 0
                 Tenedores[right] = 0
                 MPI.Win.Unlock(win, rank)
-                print("Filosofo", rank, "ya comió")
                 tpensando = random.randrange(7, 11)
                 time.sleep(tpensando)
     MPI.Win.Lock(win, rank, MPI.LOCK_EXCLUSIVE)
     Tenedores[num_procs-1] += 1
     MPI.Win.Unlock(win, rank)
-    print(Tenedores[num_procs-1])
-# if rank == 0:
-#     win_mem = np.empty(num_procs-1,dtype=int)
-#     win_mem.fill(1)
-#     win = MPI.Win.Create( win_mem,comm=comm )
-# else:
-#     win = MPI.Win.Create(None,comm=comm )
-# win.Fence()
-# if(rank == 1):
-#     x = np.empty(num_procs-1,dtype=int)
-#     print(x)
-#     x = win.Get(x,0,target=0)
-#     print(x)
-# win.Fence()
